@@ -318,47 +318,53 @@ Higher tiller count = greater panicle number = potential yield advantage (if gra
 ### Figure 7.1: Ability to be Filled — Timepoint 1
 **File**: `abilitytobefilled_barplot_tp1.{png,pdf,svg}`
 
-**Purpose**: Reproductive competence/grain-filling phenotypic score at baseline
+**Purpose**: Grain-filling proportion (%) at baseline
 
 **Biological Meaning**:
-Measured on ordinal/index scale (likely 0-9 or similar); indicates the morphological/physiological capacity of the plant to set and fill grain at reproductive stage. High score = robust reproductive development; low score = poor reproductive condition.
+Measured as a **proportion (0–100 scale)** representing the percentage of grains successfully filled relative to total grains set. High value (e.g., 85%) = robust grain development; low value (e.g., 45%) = significant grain abortion or poor fill. This reflects the plant's reproductive sink strength (capacity to accumulate carbohydrates in developing grain tissue).
 
 **Interpretation**:
-- TP1 measurement taken before or very early in reproductive phase
-- Values may be variable or low (plants may not yet show reproductive structures)
-- Baseline score = genetic predisposition for reproductive vigor
-- Control and treatment comparable at baseline
+- TP1 measurement: Early grain-filling phase (plants transitioning to reproductive stage)
+- Expected range: Typically 30–80% (some grains set but not all will fill successfully)
+- Baseline filling % = genetic predisposition for reproductive vigor
+- Control and treatment comparable at baseline (no prior treatment effect on grain development)
 
 ---
 
 ### Figure 7.2: Ability to be Filled — Timepoint 2
 **File**: `abilitytobefilled_barplot_tp2.{png,pdf,svg}`
 
-**Purpose**: **KEY TRAIT FOR YIELD POTENTIAL** — Grain-filling capacity post-treatment
+**Purpose**: **PRIMARY YIELD COMPONENT** — Grain-filling proportion (%) post-treatment
 
 **Biological Meaning**:
-By TP2 (~13-15 weeks), plants are in active grain-filling stage. This score reflects the "sink strength" (capacity to accumulate carbohydrates in developing grains) and physiological health.
+By TP2 (~13-15 weeks), plants are in active grain-maturation stage. This proportion reflects the "sink strength" — the percentage of initiated grains that successfully accumulated sufficient carbohydrates to reach maturity. Higher % = more efficient resource allocation to reproductive tissue.
 
 **Interpretation**:
-- **Treatment effect on reproductive success**: If orange > blue, Spirulina enhances grain fill
-  - Mechanism: Improved photosynthetic source (more dry matter accumulation) + improved sink physiology (nutrient minerals from Spirulina support grain development)
-- **Cultivar differences in reproductive potential**: Some lines inherently better grain fillers
-- **Agricultural relevance**: High filling ability → grain weight → final yield
+- **Treatment effect on grain-fill**: If orange > blue, Spirulina increases the proportion of grains successfully filled
+  - Mechanism: Enhanced photosynthetic source (more carbohydrate production via improved biomass) + improved nutrient translocation to grains (N, P, K, Mg from Spirulina)
+  - Physiological outcome: Reduced grain abortion; more grains reach physiological maturity
+- **Cultivar differences**: Some cultivars inherently higher grain-fill % (genetic predisposition)
+- **Agricultural significance**: Grain-fill % directly impacts final grain yield (weight and number of harvestable grains)
+- **Range expected**: TP2 values typically 60–95% (higher than TP1 due to ongoing maturation)
 
-**Expected Pattern**: 
-Positive treatment effect expected (Spirulina should support reproductive physiology). Magnitude varies by cultivar.
+**Expected Treatment Response**: 
+Positive Spirulina effect: orange bars ≥ blue bars (especially cultivars 22, 29, 30). Magnitude varies by genotype.
 
 ---
 
 ### Figure 7.3: Ability to be Filled — Combined (TP1 + TP2)
 **File**: `abilitytobefilled_barplot.{png,pdf,svg}`
 
-**Purpose**: Trajectory of reproductive potential from early to late growth stage
+**Purpose**: Temporal trajectory of grain-filling success across maturation
 
 **Interpretation**:
-- Usually increasing from TP1→TP2 (plants transition to reproductive phase)
-- Treatment effect: Slope may increase (orange > blue at TP2 especially)
-- **Reproductive phase assessment**: Larger TP2 differences indicate strong treatment effect on grain maturation
+- Generally **increasing from TP1→TP2** (ongoing grain maturation and carbohydrate accumulation)
+- TP1→TP2 slope magnitude = rate of additional grain maturation during the 3-month interval
+- **Treatment effect persistence**: If orange consistently ≥ blue across timepoints, sustained reproductive advantage from Spirulina
+- **Cultivar-by-treatment interaction**: Parallel slopes (G×T absent) vs. diverging slopes (G×T interaction present)
+  - Parallel: Spirulina effect uniform across cultivars
+  - Diverging: Some cultivars respond more to Spirulina than others (genotype-specific benefit)
+- **Yield prediction**: TP2 grain-fill % directly correlates with harvestable grain weight at maturity
 
 ---
 
@@ -417,6 +423,6 @@ R code for figure generation is fully documented in `spirulina_barplot_analysis.
 
 ---
 
-*Figure legends prepared by: Bioinformatics and Biological Data Analysis Team*  
+*Figure legends prepared by: Biological Data Analyst, Scientific Visualization Specialist, R Programming Expert; A.Samir.Abouzeid*  
 *Generated: 2026-05-26*  
 *License: CC-BY-4.0 (Attribution 4.0 International)*

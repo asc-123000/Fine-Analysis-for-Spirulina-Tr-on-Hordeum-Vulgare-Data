@@ -103,7 +103,7 @@ Example sample identifiers:
 | **Vegetative fresh weight in cm** | g | Total above-ground fresh biomass | Water content; immediate growth response |
 | **Vegetative dry weight in cm** | g | Dehydrated above-ground biomass (organic matter) | **Primary metric of growth** |
 | **No. of tillers/pot** | count | Number of lateral shoots | Branching architecture; yield potential |
-| **Ability to be filled** | index | Grain-filling capacity (phenotypic score) | Reproductive competence; sink strength |
+| **Ability to be filled** | % (0-100) | Proportion of grains successfully filled | Grain yield potential; reproductive sink strength |
 
 ### Trait Selection Rationale
 
@@ -470,9 +470,9 @@ file.access(png_dir, mode = 2)  # Should return 0 (writable)
 ## Citation and Attribution
 
 **Analysis Date**: 2026  
-**Team**: Biological Data Analyst, Scientific Visualization Specialist, Plant Data Scientist, R Programming Expert  
+**Team**: Biological Data Analyst, Scientific Visualization Specialist, R Programming Expert, Prof. of Genetics, Plant Data Scientist, Junior researcher.
 **Software**: R 4.0+, ggplot2, tidyverse  
-**License**: Reproducible research (modify as needed for your publication)
+**License**: Reproducible research 
 
 ---
 
@@ -486,7 +486,7 @@ For questions about:
 
 ---
 
-**Status**: ✅ Ready for publication-quality figure generation
+**Status**: Ready for publication-quality figure generation
 
 ---
 *Last updated: 2026-05-25*
