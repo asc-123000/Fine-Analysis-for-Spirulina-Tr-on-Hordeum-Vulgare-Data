@@ -117,6 +117,28 @@ detect_sample_col <- function(data) {
   names(data)[which.max(scores)]
 }
 
+# Helper: normalize ability-to-be-filled values to percent scale (0-100)
+normalize_ability_to_be_filled <- function(data) {
+  target_cols <- names(data)[str_detect(names(data), "ability.*filled|grain.*fill")]
+  if (length(target_cols) == 0) {
+    return(data)
+  }
+
+  for (col in target_cols) {
+    vals <- data[[col]]
+    if (all(is.na(vals))) {
+      next
+    }
+    max_val <- suppressWarnings(max(vals, na.rm = TRUE))
+    if (is.finite(max_val) && max_val > 0 && max_val <= 1) {
+      data[[col]] <- vals * 100
+      message("Rescaled ", col, " from proportion to percent (0-100).")
+    }
+  }
+
+  data
+}
+
 # Function to clean and standardize data
 standardize_data <- function(data, timepoint) {
   
@@ -139,6 +161,9 @@ standardize_data <- function(data, timepoint) {
         )
       )
     )
+
+  # Normalize grain-filling values to a percent scale (0-100)
+  data <- normalize_ability_to_be_filled(data)
   
   # Add timepoint identifier
   data <- data %>%
@@ -346,6 +371,11 @@ create_barplot <- function(data, parameter_name, timepoint_filter = NULL) {
     mutate(sample_id = factor(sample_id, levels = sample_order_local))
   
   # Create plot
+  y_label <- tools::toTitleCase(gsub("_", " ", parameter_name))
+  if (str_detect(parameter_name, "ability.*filled|grain.*fill")) {
+    y_label <- paste0(y_label, " (%)")
+  }
+
   p <- plot_data %>%
     ggplot(aes(x = sample_id, y = value, fill = treatment)) +
     geom_col(
@@ -371,7 +401,7 @@ create_barplot <- function(data, parameter_name, timepoint_filter = NULL) {
                       tools::toTitleCase(gsub("_", " ", parameter_name)),
                       if (is.null(timepoint_filter)) "All Timepoints" else timepoint_filter),
       x = "Biological Sample",
-      y = tools::toTitleCase(gsub("_", " ", parameter_name)),
+      y = y_label,
       fill = "Treatment",
       color = "Treatment"
     ) +

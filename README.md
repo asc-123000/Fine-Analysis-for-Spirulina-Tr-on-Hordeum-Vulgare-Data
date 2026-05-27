@@ -103,7 +103,7 @@ Example sample identifiers:
 | **Vegetative fresh weight in cm** | g | Total above-ground fresh biomass | Water content; immediate growth response |
 | **Vegetative dry weight in cm** | g | Dehydrated above-ground biomass (organic matter) | **Primary metric of growth** |
 | **No. of tillers/pot** | count | Number of lateral shoots | Branching architecture; yield potential |
-| **Ability to be filled** | % (0-100) | Proportion of grains successfully filled | Grain yield potential; reproductive sink strength |
+| **Ability to be filled** | index | Grain-filling capacity (phenotypic score) | Reproductive competence; sink strength |
 
 ### Trait Selection Rationale
 
