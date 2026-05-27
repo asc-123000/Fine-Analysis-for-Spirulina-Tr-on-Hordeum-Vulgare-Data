@@ -3,7 +3,7 @@
 # =========================================================================
 # Project: Biological visualization of Spirulina effect on barley cultivars
 # Purpose: Generate publication-quality exploratory barplots for all parameters
-# Author: Scientific Visualization Team
+# Author: A. Samir Abouzeid
 # Date: 2026
 # =========================================================================
 
