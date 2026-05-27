@@ -51,6 +51,10 @@ pdf_dir <- file.path(output_dir, "pdf")
 svg_dir <- file.path(output_dir, "svg")
 csv_dir <- file.path(output_dir, "csv")
 xlsx_dir <- file.path(output_dir, "xlsx")
+mean_dir <- file.path(output_dir, "mean")
+mean_png_dir <- file.path(mean_dir, "png")
+mean_pdf_dir <- file.path(mean_dir, "pdf")
+mean_svg_dir <- file.path(mean_dir, "svg")
 
 # Verify directories exist
 dir.create(output_dir, showWarnings = FALSE)
@@ -59,6 +63,10 @@ dir.create(pdf_dir, showWarnings = FALSE)
 dir.create(svg_dir, showWarnings = FALSE)
 dir.create(csv_dir, showWarnings = FALSE)
 dir.create(xlsx_dir, showWarnings = FALSE)
+dir.create(mean_dir, showWarnings = FALSE)
+dir.create(mean_png_dir, showWarnings = FALSE)
+dir.create(mean_pdf_dir, showWarnings = FALSE)
+dir.create(mean_svg_dir, showWarnings = FALSE)
 
 # =========================================================================
 # 3. DATA LOADING AND INITIAL EXPLORATION
@@ -317,6 +325,20 @@ data_long <- data_combined %>%
     timepoint = factor(timepoint, levels = c("Timepoint 1", "Timepoint 2"))
   )
 
+# Mean across replicates and timepoints (combined)
+data_mean <- data_long %>%
+  group_by(cultivar, treatment, parameter) %>%
+  summarise(
+    mean_value = mean(value, na.rm = TRUE),
+    n = sum(!is.na(value)),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    cultivar = factor(cultivar, levels = c("15", "22", "29", "30", "32")),
+    treatment = factor(treatment, levels = c("Control", "Treatment")),
+    mean_value = if_else(is.nan(mean_value), NA_real_, mean_value)
+  )
+
 # Create ordered sample factor (preserve biological order)
 build_sample_order <- function(df) {
   df %>%
@@ -453,6 +475,65 @@ create_barplot <- function(data, parameter_name, timepoint_filter = NULL) {
   return(p)
 }
 
+# Function to create mean barplot (combined timepoints)
+create_mean_barplot <- function(summary_data, parameter_name) {
+  plot_data <- summary_data %>%
+    filter(parameter == parameter_name)
+
+  y_label <- tools::toTitleCase(gsub("_", " ", parameter_name))
+  if (str_detect(parameter_name, "ability.*filled|grain.*fill")) {
+    y_label <- paste0(y_label, " (%)")
+  }
+
+  p <- plot_data %>%
+    ggplot(aes(x = cultivar, y = mean_value, fill = treatment)) +
+    geom_col(
+      position = position_dodge(width = 0.7),
+      alpha = 0.85,
+      color = "black",
+      size = 0.4,
+      width = 0.6
+    ) +
+    scale_fill_manual(values = treatment_colors) +
+    labs(
+      title = sprintf(
+        "Mean of Replicates (All Timepoints Combined) - %s",
+        tools::toTitleCase(gsub("_", " ", parameter_name))
+      ),
+      x = "Cultivar",
+      y = y_label,
+      fill = "Treatment"
+    ) +
+    theme_pubr(
+      base_size = 11,
+      legend = "right",
+      margin = TRUE
+    ) +
+    theme(
+      axis.text.x = element_text(size = 10, face = "plain", family = "sans"),
+      axis.text.y = element_text(size = 10),
+      axis.title.x = element_text(size = 11, face = "bold"),
+      axis.title.y = element_text(size = 11, face = "bold"),
+      plot.title = element_text(
+        size = 12,
+        face = "bold",
+        hjust = 0.5,
+        margin = margin(b = 10)
+      ),
+      legend.title = element_text(size = 10, face = "bold"),
+      legend.text = element_text(size = 10),
+      legend.position = "right",
+      plot.background = element_rect(fill = "white", color = NA),
+      panel.background = element_rect(fill = "#F5F5F5", color = "black", size = 0.5),
+      panel.grid.major.y = element_line(color = "white", size = 0.3),
+      panel.grid.minor.y = element_blank(),
+      panel.grid.major.x = element_blank(),
+      plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
+    )
+
+  return(p)
+}
+
 # =========================================================================
 # 9. EXPORT FIGURE FUNCTION
 # =========================================================================
@@ -505,6 +586,54 @@ export_figure <- function(plot_obj, filename, timepoint = NULL, formats = c("png
     
     else if (fmt == "svg") {
       filepath <- file.path(svg_dir, paste0(base_filename, ".svg"))
+      ggsave(
+        filepath,
+        plot = plot_obj,
+        width = 12,
+        height = 7,
+        dpi = 300,
+        units = "in",
+        device = "svg"
+      )
+      cat(sprintf("✓ Exported: %s\n", basename(filepath)))
+    }
+  }
+}
+
+export_mean_figure <- function(plot_obj, filename, formats = c("png", "pdf", "svg")) {
+  base_filename <- filename
+
+  for (fmt in formats) {
+    if (fmt == "png") {
+      filepath <- file.path(mean_png_dir, paste0(base_filename, ".png"))
+      ggsave(
+        filepath,
+        plot = plot_obj,
+        width = 12,
+        height = 7,
+        dpi = 300,
+        units = "in",
+        device = "png"
+      )
+      cat(sprintf("✓ Exported: %s\n", basename(filepath)))
+    }
+
+    else if (fmt == "pdf") {
+      filepath <- file.path(mean_pdf_dir, paste0(base_filename, ".pdf"))
+      ggsave(
+        filepath,
+        plot = plot_obj,
+        width = 12,
+        height = 7,
+        dpi = 300,
+        units = "in",
+        device = "pdf"
+      )
+      cat(sprintf("✓ Exported: %s\n", basename(filepath)))
+    }
+
+    else if (fmt == "svg") {
+      filepath <- file.path(mean_svg_dir, paste0(base_filename, ".svg"))
       ggsave(
         filepath,
         plot = plot_obj,
@@ -574,6 +703,30 @@ for (param in numeric_cols) {
 }
 
 # =========================================================================
+# 10B. GENERATE MEAN BARPLOTS (ALL TIMEPOINTS COMBINED)
+# =========================================================================
+
+cat("\n============================================\n")
+cat("GENERATING MEAN BARPLOTS (ALL TIMEPOINTS COMBINED)\n")
+cat("============================================\n")
+
+for (param in numeric_cols) {
+  cat("\n" %+% sprintf("Processing mean plot: %s", param) %+% "\n")
+  cat(strrep("-", 50) %+% "\n")
+
+  p_mean <- create_mean_barplot(data_mean, param)
+
+  param_filename <- tolower(gsub(" ", "_", gsub("[^[:alnum:] ]", "", param)))
+  filename_base <- paste0(param_filename, "_mean_barplot")
+
+  export_mean_figure(
+    p_mean,
+    filename = filename_base,
+    formats = c("png", "pdf", "svg")
+  )
+}
+
+# =========================================================================
 # 11. SUMMARY AND SESSION COMPLETION
 # =========================================================================
 
@@ -585,6 +738,11 @@ cat("\n📊 GENERATED FIGURES SUMMARY:\n")
 cat("✓ PNG files:", length(list.files(png_dir, pattern = "\\.png$")), "\n")
 cat("✓ PDF files:", length(list.files(pdf_dir, pattern = "\\.pdf$")), "\n")
 cat("✓ SVG files:", length(list.files(svg_dir, pattern = "\\.svg$")), "\n")
+
+cat("\n📊 GENERATED MEAN FIGURES SUMMARY:\n")
+cat("✓ Mean PNG files:", length(list.files(mean_png_dir, pattern = "\\.png$")), "\n")
+cat("✓ Mean PDF files:", length(list.files(mean_pdf_dir, pattern = "\\.pdf$")), "\n")
+cat("✓ Mean SVG files:", length(list.files(mean_svg_dir, pattern = "\\.svg$")), "\n")
 
 cat("\n📁 OUTPUT LOCATIONS:\n")
 cat("   PNG:  ", png_dir, "\n")
