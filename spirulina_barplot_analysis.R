@@ -339,6 +339,21 @@ data_mean <- data_long %>%
     mean_value = if_else(is.nan(mean_value), NA_real_, mean_value)
   )
 
+# Mean across replicates by timepoint
+data_mean_timepoint <- data_long %>%
+  group_by(cultivar, treatment, timepoint, parameter) %>%
+  summarise(
+    mean_value = mean(value, na.rm = TRUE),
+    n = sum(!is.na(value)),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    cultivar = factor(cultivar, levels = c("15", "22", "29", "30", "32")),
+    treatment = factor(treatment, levels = c("Control", "Treatment")),
+    timepoint = factor(timepoint, levels = c("Timepoint 1", "Timepoint 2")),
+    mean_value = if_else(is.nan(mean_value), NA_real_, mean_value)
+  )
+
 # Create ordered sample factor (preserve biological order)
 build_sample_order <- function(df) {
   df %>%
@@ -503,6 +518,133 @@ create_mean_barplot <- function(summary_data, parameter_name) {
       x = "Cultivar",
       y = y_label,
       fill = "Treatment"
+    ) +
+    theme_pubr(
+      base_size = 11,
+      legend = "right",
+      margin = TRUE
+    ) +
+    theme(
+      axis.text.x = element_text(size = 10, face = "plain", family = "sans"),
+      axis.text.y = element_text(size = 10),
+      axis.title.x = element_text(size = 11, face = "bold"),
+      axis.title.y = element_text(size = 11, face = "bold"),
+      plot.title = element_text(
+        size = 12,
+        face = "bold",
+        hjust = 0.5,
+        margin = margin(b = 10)
+      ),
+      legend.title = element_text(size = 10, face = "bold"),
+      legend.text = element_text(size = 10),
+      legend.position = "right",
+      plot.background = element_rect(fill = "white", color = NA),
+      panel.background = element_rect(fill = "#F5F5F5", color = "black", size = 0.5),
+      panel.grid.major.y = element_line(color = "white", size = 0.3),
+      panel.grid.minor.y = element_blank(),
+      panel.grid.major.x = element_blank(),
+      plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
+    )
+
+  return(p)
+}
+
+# Function to create mean barplot by timepoint
+create_mean_timepoint_barplot <- function(summary_data, parameter_name, timepoint_filter) {
+  plot_data <- summary_data %>%
+    filter(parameter == parameter_name, timepoint == timepoint_filter)
+
+  y_label <- tools::toTitleCase(gsub("_", " ", parameter_name))
+  if (str_detect(parameter_name, "ability.*filled|grain.*fill")) {
+    y_label <- paste0(y_label, " (%)")
+  }
+
+  p <- plot_data %>%
+    ggplot(aes(x = cultivar, y = mean_value, fill = treatment)) +
+    geom_col(
+      position = position_dodge(width = 0.7),
+      alpha = 0.85,
+      color = "black",
+      size = 0.4,
+      width = 0.6
+    ) +
+    scale_fill_manual(values = treatment_colors) +
+    labs(
+      title = sprintf(
+        "Mean of Replicates - %s (%s)",
+        tools::toTitleCase(gsub("_", " ", parameter_name)),
+        timepoint_filter
+      ),
+      x = "Cultivar",
+      y = y_label,
+      fill = "Treatment"
+    ) +
+    theme_pubr(
+      base_size = 11,
+      legend = "right",
+      margin = TRUE
+    ) +
+    theme(
+      axis.text.x = element_text(size = 10, face = "plain", family = "sans"),
+      axis.text.y = element_text(size = 10),
+      axis.title.x = element_text(size = 11, face = "bold"),
+      axis.title.y = element_text(size = 11, face = "bold"),
+      plot.title = element_text(
+        size = 12,
+        face = "bold",
+        hjust = 0.5,
+        margin = margin(b = 10)
+      ),
+      legend.title = element_text(size = 10, face = "bold"),
+      legend.text = element_text(size = 10),
+      legend.position = "right",
+      plot.background = element_rect(fill = "white", color = NA),
+      panel.background = element_rect(fill = "#F5F5F5", color = "black", size = 0.5),
+      panel.grid.major.y = element_line(color = "white", size = 0.3),
+      panel.grid.minor.y = element_blank(),
+      panel.grid.major.x = element_blank(),
+      plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
+    )
+
+  return(p)
+}
+
+# Function to compare timepoints with shaded overlap (mean of replicates)
+create_timepoint_comparison_barplot <- function(summary_data, parameter_name) {
+  plot_data <- summary_data %>%
+    filter(parameter == parameter_name) %>%
+    arrange(timepoint)
+
+  y_label <- tools::toTitleCase(gsub("_", " ", parameter_name))
+  if (str_detect(parameter_name, "ability.*filled|grain.*fill")) {
+    y_label <- paste0(y_label, " (%)")
+  }
+
+  p <- plot_data %>%
+    ggplot(aes(
+      x = cultivar,
+      y = mean_value,
+      fill = treatment,
+      alpha = timepoint,
+      group = treatment
+    )) +
+    geom_col(
+      position = position_dodge(width = 0.7),
+      color = "black",
+      size = 0.4,
+      width = 0.6
+    ) +
+    scale_fill_manual(values = treatment_colors) +
+    scale_alpha_manual(values = c("Timepoint 1" = 0.45, "Timepoint 2" = 0.85)) +
+    labs(
+      title = sprintf(
+        "Timepoint Comparison (Mean of Replicates) - %s",
+        tools::toTitleCase(gsub("_", " ", parameter_name))
+      ),
+      x = "Cultivar",
+      y = y_label,
+      fill = "Treatment",
+      alpha = "Timepoint"
     ) +
     theme_pubr(
       base_size = 11,
@@ -721,6 +863,58 @@ for (param in numeric_cols) {
 
   export_mean_figure(
     p_mean,
+    filename = filename_base,
+    formats = c("png", "pdf", "svg")
+  )
+}
+
+# =========================================================================
+# 10C. GENERATE MEAN BARPLOTS BY TIMEPOINT
+# =========================================================================
+
+cat("\n============================================\n")
+cat("GENERATING MEAN BARPLOTS BY TIMEPOINT\n")
+cat("============================================\n")
+
+timepoint_levels <- levels(data_long$timepoint)
+
+for (param in numeric_cols) {
+  for (tp in timepoint_levels) {
+    cat("\n" %+% sprintf("Processing mean plot: %s (%s)", param, tp) %+% "\n")
+    cat(strrep("-", 50) %+% "\n")
+
+    p_mean_tp <- create_mean_timepoint_barplot(data_mean_timepoint, param, tp)
+
+    param_filename <- tolower(gsub(" ", "_", gsub("[^[:alnum:] ]", "", param)))
+    filename_base <- paste0(param_filename, "_mean_barplot_", ifelse(tp == "Timepoint 1", "tp1", "tp2"))
+
+    export_mean_figure(
+      p_mean_tp,
+      filename = filename_base,
+      formats = c("png", "pdf", "svg")
+    )
+  }
+}
+
+# =========================================================================
+# 10D. GENERATE TIMEPOINT COMPARISON BARPLOTS (SHADED OVERLAY)
+# =========================================================================
+
+cat("\n============================================\n")
+cat("GENERATING TIMEPOINT COMPARISON BARPLOTS (SHADED OVERLAY)\n")
+cat("============================================\n")
+
+for (param in numeric_cols) {
+  cat("\n" %+% sprintf("Processing timepoint comparison: %s", param) %+% "\n")
+  cat(strrep("-", 50) %+% "\n")
+
+  p_compare <- create_timepoint_comparison_barplot(data_mean_timepoint, param)
+
+  param_filename <- tolower(gsub(" ", "_", gsub("[^[:alnum:] ]", "", param)))
+  filename_base <- paste0(param_filename, "_mean_timepoint_compare")
+
+  export_mean_figure(
+    p_compare,
     filename = filename_base,
     formats = c("png", "pdf", "svg")
   )
