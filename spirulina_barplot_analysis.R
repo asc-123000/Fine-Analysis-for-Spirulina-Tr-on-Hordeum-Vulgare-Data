@@ -325,20 +325,6 @@ data_long <- data_combined %>%
     timepoint = factor(timepoint, levels = c("Timepoint 1", "Timepoint 2"))
   )
 
-# Mean across replicates and timepoints (combined)
-data_mean <- data_long %>%
-  group_by(cultivar, treatment, parameter) %>%
-  summarise(
-    mean_value = mean(value, na.rm = TRUE),
-    n = sum(!is.na(value)),
-    .groups = "drop"
-  ) %>%
-  mutate(
-    cultivar = factor(cultivar, levels = c("15", "22", "29", "30", "32")),
-    treatment = factor(treatment, levels = c("Control", "Treatment")),
-    mean_value = if_else(is.nan(mean_value), NA_real_, mean_value)
-  )
-
 # Mean across replicates by timepoint
 data_mean_timepoint <- data_long %>%
   group_by(cultivar, treatment, timepoint, parameter) %>%
@@ -487,65 +473,6 @@ create_barplot <- function(data, parameter_name, timepoint_filter = NULL) {
       plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
     )
   
-  return(p)
-}
-
-# Function to create mean barplot (combined timepoints)
-create_mean_barplot <- function(summary_data, parameter_name) {
-  plot_data <- summary_data %>%
-    filter(parameter == parameter_name)
-
-  y_label <- tools::toTitleCase(gsub("_", " ", parameter_name))
-  if (str_detect(parameter_name, "ability.*filled|grain.*fill")) {
-    y_label <- paste0(y_label, " (%)")
-  }
-
-  p <- plot_data %>%
-    ggplot(aes(x = cultivar, y = mean_value, fill = treatment)) +
-    geom_col(
-      position = position_dodge(width = 0.7),
-      alpha = 0.85,
-      color = "black",
-      size = 0.4,
-      width = 0.6
-    ) +
-    scale_fill_manual(values = treatment_colors) +
-    labs(
-      title = sprintf(
-        "Mean of Replicates (All Timepoints Combined) - %s",
-        tools::toTitleCase(gsub("_", " ", parameter_name))
-      ),
-      x = "Cultivar",
-      y = y_label,
-      fill = "Treatment"
-    ) +
-    theme_pubr(
-      base_size = 11,
-      legend = "right",
-      margin = TRUE
-    ) +
-    theme(
-      axis.text.x = element_text(size = 10, face = "plain", family = "sans"),
-      axis.text.y = element_text(size = 10),
-      axis.title.x = element_text(size = 11, face = "bold"),
-      axis.title.y = element_text(size = 11, face = "bold"),
-      plot.title = element_text(
-        size = 12,
-        face = "bold",
-        hjust = 0.5,
-        margin = margin(b = 10)
-      ),
-      legend.title = element_text(size = 10, face = "bold"),
-      legend.text = element_text(size = 10),
-      legend.position = "right",
-      plot.background = element_rect(fill = "white", color = NA),
-      panel.background = element_rect(fill = "#F5F5F5", color = "black", size = 0.5),
-      panel.grid.major.y = element_line(color = "white", size = 0.3),
-      panel.grid.minor.y = element_blank(),
-      panel.grid.major.x = element_blank(),
-      plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
-    )
-
   return(p)
 }
 
@@ -845,31 +772,7 @@ for (param in numeric_cols) {
 }
 
 # =========================================================================
-# 10B. GENERATE MEAN BARPLOTS (ALL TIMEPOINTS COMBINED)
-# =========================================================================
-
-cat("\n============================================\n")
-cat("GENERATING MEAN BARPLOTS (ALL TIMEPOINTS COMBINED)\n")
-cat("============================================\n")
-
-for (param in numeric_cols) {
-  cat("\n" %+% sprintf("Processing mean plot: %s", param) %+% "\n")
-  cat(strrep("-", 50) %+% "\n")
-
-  p_mean <- create_mean_barplot(data_mean, param)
-
-  param_filename <- tolower(gsub(" ", "_", gsub("[^[:alnum:] ]", "", param)))
-  filename_base <- paste0(param_filename, "_mean_barplot")
-
-  export_mean_figure(
-    p_mean,
-    filename = filename_base,
-    formats = c("png", "pdf", "svg")
-  )
-}
-
-# =========================================================================
-# 10C. GENERATE MEAN BARPLOTS BY TIMEPOINT
+# 10B. GENERATE MEAN BARPLOTS BY TIMEPOINT
 # =========================================================================
 
 cat("\n============================================\n")
@@ -897,7 +800,7 @@ for (param in numeric_cols) {
 }
 
 # =========================================================================
-# 10D. GENERATE TIMEPOINT COMPARISON BARPLOTS (SHADED OVERLAY)
+# 10C. GENERATE TIMEPOINT COMPARISON BARPLOTS (SHADED OVERLAY)
 # =========================================================================
 
 cat("\n============================================\n")
