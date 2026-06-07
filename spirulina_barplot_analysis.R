@@ -562,7 +562,7 @@ create_timepoint_comparison_barplot <- function(summary_data, parameter_name) {
       width = 0.6
     ) +
     scale_fill_manual(values = treatment_colors) +
-    scale_alpha_manual(values = c("Timepoint 1" = 0.45, "Timepoint 2" = 0.85)) +
+    scale_alpha_manual(values = c("Timepoint 1" = 0.85, "Timepoint 2" = 0.45)) +
     labs(
       title = sprintf(
         "Timepoint Comparison (Mean of Replicates) - %s",
