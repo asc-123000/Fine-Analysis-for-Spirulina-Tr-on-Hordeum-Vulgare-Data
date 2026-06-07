@@ -603,6 +603,86 @@ create_timepoint_comparison_barplot <- function(summary_data, parameter_name) {
   return(p)
 }
 
+# Function to create cultivar-specific barplot (all parameters per cultivar)
+create_cultivar_comparison_barplot <- function(summary_data, cultivar_filter) {
+  plot_data <- summary_data %>%
+    filter(cultivar == cultivar_filter) %>%
+    arrange(treatment, timepoint)
+
+  # Create cleaner parameter labels for display
+  plot_data <- plot_data %>%
+    mutate(
+      parameter_clean = case_when(
+        str_detect(parameter, "height") ~ "Height",
+        str_detect(parameter, "yeb") ~ "YEB Length",
+        str_detect(parameter, "stem") ~ "Stem Diameter",
+        str_detect(parameter, "fresh") ~ "Fresh Weight",
+        str_detect(parameter, "dry") ~ "Dry Weight",
+        str_detect(parameter, "tillers") ~ "No. Tillers",
+        str_detect(parameter, "ability") ~ "Ability to Fill",
+        TRUE ~ parameter
+      ),
+      parameter_clean = factor(parameter_clean, 
+        levels = c("Height", "YEB Length", "Stem Diameter", "Fresh Weight", 
+                  "Dry Weight", "No. Tillers", "Ability to Fill"))
+    )
+
+  p <- plot_data %>%
+    ggplot(aes(
+      x = mean_value,
+      y = parameter_clean,
+      fill = treatment,
+      alpha = timepoint,
+      group = treatment
+    )) +
+    geom_col(
+      position = position_dodge(width = 0.7),
+      color = "black",
+      size = 0.4,
+      width = 0.6
+    ) +
+    scale_fill_manual(values = treatment_colors) +
+    scale_alpha_manual(values = c("Timepoint 1" = 0.85, "Timepoint 2" = 0.40)) +
+    labs(
+      title = sprintf(
+        "All Parameters - Cultivar %s (Mean of Replicates)",
+        cultivar_filter
+      ),
+      x = "Value (scaled by parameter)",
+      y = "Parameter",
+      fill = "Treatment",
+      alpha = "Timepoint"
+    ) +
+    theme_pubr(
+      base_size = 11,
+      legend = "right",
+      margin = TRUE
+    ) +
+    theme(
+      axis.text.x = element_text(size = 10, face = "plain", family = "sans"),
+      axis.text.y = element_text(size = 10, face = "bold"),
+      axis.title.x = element_text(size = 11, face = "bold"),
+      axis.title.y = element_text(size = 11, face = "bold"),
+      plot.title = element_text(
+        size = 13,
+        face = "bold",
+        hjust = 0.5,
+        margin = margin(b = 10)
+      ),
+      legend.title = element_text(size = 10, face = "bold"),
+      legend.text = element_text(size = 10),
+      legend.position = "right",
+      plot.background = element_rect(fill = "white", color = NA),
+      panel.background = element_rect(fill = "#F5F5F5", color = "black", size = 0.5),
+      panel.grid.major.x = element_line(color = "white", size = 0.3),
+      panel.grid.minor.x = element_blank(),
+      panel.grid.major.y = element_blank(),
+      plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
+    )
+
+  return(p)
+}
+
 # =========================================================================
 # 9. EXPORT FIGURE FUNCTION
 # =========================================================================
@@ -818,6 +898,31 @@ for (param in numeric_cols) {
 
   export_mean_figure(
     p_compare,
+    filename = filename_base,
+    formats = c("png", "pdf", "svg")
+  )
+}
+
+# =========================================================================
+# 10D. GENERATE CULTIVAR-SPECIFIC BARPLOTS (ALL PARAMETERS)
+# =========================================================================
+
+cat("\n============================================\n")
+cat("GENERATING CULTIVAR-SPECIFIC PLOTS\n")
+cat("============================================\n")
+
+cultivar_levels <- unique(data_mean_timepoint$cultivar)
+
+for (cultiv in cultivar_levels) {
+  cat("\n" %+% sprintf("Processing cultivar plot: %s", cultiv) %+% "\n")
+  cat(strrep("-", 50) %+% "\n")
+
+  p_cultiv <- create_cultivar_comparison_barplot(data_mean_timepoint, cultiv)
+
+  filename_base <- paste0("cultivar_", cultiv, "_all_parameters_compare")
+
+  export_mean_figure(
+    p_cultiv,
     filename = filename_base,
     formats = c("png", "pdf", "svg")
   )
